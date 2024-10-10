@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TripAccepted;
 use App\Models\Trip;
 use App\Models\TripType;
 use App\Models\User;
@@ -114,9 +115,12 @@ class TripController extends Controller
     {
 
         return User::where('is_driver', true)
-            ->where('driver_type', $carType)->where('id', '!=', auth()->user()->id)
+            ->where('driver_type', $carType)
+            ->where('is_available', 1)
+            ->where('id', '!=', auth()->user()->id)
             ->whereRaw("ST_Distance_Sphere(point(lng, lat), point(?, ?)) <= 50000", [$longitude, $latitude])
             ->get();
+
     }
 
 
@@ -128,11 +132,25 @@ class TripController extends Controller
             return $this->returnError('E003', 'Trip not found');
         }
 
+        if ($trip->status !== 'searching') {
+            return $this->returnError('E005', 'Trip has already been accepted.');
+        }
+
+        $driver = User::find($driver_id);
+        if (!$driver || !$driver->is_driver || $driver->is_available !== 1) {
+            return $this->returnError('E006', 'Driver is not available.');
+        }
+
         $trip->driver_id = $driver_id;
+        $trip->status = 'way';
         $trip->save();
+
+        // Notify the rider about the accepted trip using events or sockets
+        broadcast(new TripAccepted($trip))->toOthers();
 
         return $this->returnSuccessMessage('Trip accepted successfully');
     }
+
 
     public function getTripHistory($user_id)
     {

@@ -9,10 +9,61 @@ use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Traits\HelpersTrait;
-
+use Twilio\Rest\Client;
 class AuthController extends Controller
 {
     use HelpersTrait;
+
+    public function requestPhoneNumber(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string|unique:users,phone',
+            'country_code' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnValidationError('E001', $validator);
+        }
+
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH');
+        $twilio = new Client($sid, $token);
+
+        $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+            ->verifications
+            ->create($request->country_code . $request->phone, "sms");
+
+        return $this->returnData('status', $verification->status, 'OTP sent successfully');
+    }
+    public function validateOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string',
+            'country_code' => 'required|string',
+            'otp' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnValidationError('E001', $validator);
+        }
+
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH');
+        $twilio = new Client($sid, $token);
+
+        $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+            ->verificationChecks
+            ->create([
+                "to" => $request->country_code . $request->phone,
+                "code" => $request->otp,
+            ]);
+
+        if ($verification_check->status === 'approved') {
+            return $this->returnSuccessMessage('OTP validated successfully');
+        } else {
+            return $this->returnError('E002', 'Invalid OTP');
+        }
+    }
 
     public function register(Request $request)
     {
@@ -30,6 +81,8 @@ class AuthController extends Controller
             return $this->returnValidationError('E001', $validator);
         }
 
+        // You can also add an additional check here to ensure the OTP is validated before registration.
+
         $user = User::create([
             'fname' => $request->fname,
             'lname' => $request->lname,
@@ -44,6 +97,7 @@ class AuthController extends Controller
 
         return $this->returnData('token', compact('token'), 'User registered successfully');
     }
+
 
     public function login(Request $request)
     {
