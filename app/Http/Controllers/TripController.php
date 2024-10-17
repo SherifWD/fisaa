@@ -88,7 +88,7 @@ class TripController extends Controller
         if ($trip['drivers']->isEmpty()) {
             return $this->returnError('E003', 'No drivers found nearby for carrier.');
         }
-
+        dd($request->all());
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
             'type_id' => $request->type_id,
