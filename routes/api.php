@@ -41,7 +41,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
   Route::put('trips/{trip_id}/cancel', [TripController::class, 'cancelTrip']);
   Route::get('users/{user_id}/trips', [TripController::class, 'getTripHistory']);
 
-  Route::get('get-stuff-types', [TripTypeController::class, 'getStuffTypes']);
+  Route::get('get-stuff-types', [TripController::class, 'getStuffTypes']);
   Route::get('trip-types', [TripTypeController::class, 'getTripTypes']);
   Route::post('trip-types/create', [TripTypeController::class, 'createTripType']);
 
