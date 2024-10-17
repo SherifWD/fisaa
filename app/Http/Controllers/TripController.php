@@ -69,12 +69,12 @@ class TripController extends Controller
     private function createCarrierTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'object_type' => 'required|string|in:Building materials,Furniture,Food,Electrical objects,Others',
+            'object_type' => 'required|string|exists:stuff_types,name',
             'weight' => 'required|string|in:100kg,200kg,300kg+',
-            'sender_name' => 'required|string',
-            'sender_phone' => 'required|string',
-            'receiver_name' => 'required|string',
-            'receiver_phone' => 'required|string',
+            'sender_name' => 'required|string|max:255',
+            'sender_phone' => 'required|string|max:15',
+            'receiver_name' => 'required|string|max:255',
+            'receiver_phone' => 'required|string|max:15',
             'workers_needed' => 'required|in:0,1,2,3+',
             'payment_by' => 'required|string|in:sender,receiver',
         ]);
@@ -100,7 +100,7 @@ class TripController extends Controller
             'to_lng' => $request->to_lng,
             'price' => $request->price,
             'is_cash' => $request->is_cash,
-            'object_type' => $request->object_type,
+            'stuff_type_id' => $request->object_type,
             'weight' => $request->weight,
             'sender_name' => $request->sender_name,
             'sender_phone' => $request->sender_phone,
