@@ -22,6 +22,7 @@ Route::post('register', [AuthController::class, 'register']);
 
 // Login route
 Route::post('login', [AuthController::class, 'login']);
+Route::post('login-validate-login', [AuthController::class, 'loginValidateOtp']);
 
 Route::middleware([JwtMiddleware::class])->group(function () {
 

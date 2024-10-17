@@ -101,18 +101,71 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('phone', 'password');
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string|exists:users,phone',
+            'country_code' => 'required|string',
+        ]);
 
-        try {
-            if (!$token = JWTAuth::attempt($credentials)) {
-                return $this->returnError('E002', 'Invalid credentials');
-            }
-        } catch (JWTException $e) {
-            return $this->returnError('E500', 'Could not create token');
+        if ($validator->fails()) {
+            return $this->returnValidationError('E001', $validator);
         }
 
-        return $this->returnData('token', compact('token'), 'Login successful');
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH');
+        $twilio = new Client($sid, $token);
+
+        try {
+            $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+                ->verifications
+                ->create($request->country_code . $request->phone, "sms");
+
+            return $this->returnSuccessMessage('OTP sent successfully');
+        } catch (\Exception $e) {
+            return $this->returnError('E500', 'Failed to send OTP');
+        }
     }
+
+    public function loginValidateOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string|exists:users,phone',
+            'country_code' => 'required|string',
+            'otp' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnValidationError('E001', $validator);
+        }
+
+        $sid = env('TWILIO_SID');
+        $token = env('TWILIO_AUTH');
+        $twilio = new Client($sid, $token);
+
+        try {
+            $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+                ->verificationChecks
+                ->create([
+                    "to" => $request->country_code . $request->phone,
+                    "code" => $request->otp,
+                ]);
+
+            if ($verification_check->status === 'approved') {
+                $user = User::where('phone', $request->phone)->first();
+
+                if (!$user) {
+                    return $this->returnError('E003', 'User not found');
+                }
+
+                $token = JWTAuth::fromUser($user);
+                return $this->returnData('token', compact('token'), 'Login successful');
+            } else {
+                return $this->returnError('E002', 'Invalid OTP');
+            }
+        } catch (\Exception $e) {
+            return $this->returnError('E500', 'OTP validation failed');
+        }
+    }
+
 
     public function getAuthenticatedUser()
     {
