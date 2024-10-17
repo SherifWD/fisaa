@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\TripAccepted;
+use App\Models\StuffType;
 use App\Models\Trip;
 use App\Models\TripType;
 use App\Models\User;
@@ -151,7 +152,11 @@ class TripController extends Controller
         return $this->returnSuccessMessage('Trip accepted successfully');
     }
 
-
+    public function getStuffTypes()
+    {
+        $types = StuffType::all();
+        return $this->returnData('trips', $types, 'Trip history retrieved successfully');
+    }
     public function getTripHistory($user_id)
     {
         $trips = Trip::where('passenger_id', $user_id)->orWhere('driver_id', $user_id)->get();
