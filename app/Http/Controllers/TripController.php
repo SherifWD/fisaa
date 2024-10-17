@@ -69,7 +69,7 @@ class TripController extends Controller
     private function createCarrierTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'object_type' => 'required|string|exists:stuff_types,name',
+            'object_type' => 'required|string',
             'weight' => 'required|string|in:100kg,200kg,300kg+',
             'sender_name' => 'required|string|max:255',
             'sender_phone' => 'required|string|max:15',
@@ -88,7 +88,6 @@ class TripController extends Controller
         if ($trip['drivers']->isEmpty()) {
             return $this->returnError('E003', 'No drivers found nearby for carrier.');
         }
-        dd($request->all());
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
             'type_id' => $request->type_id,
