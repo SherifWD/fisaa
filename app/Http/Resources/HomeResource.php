@@ -29,7 +29,7 @@ class HomeResource extends JsonResource
         $trips[] =
           [
             'id' => $trip->id,
-            'type_id' => TripType::find($trip->type_id)->name,
+            'type_name' => TripType::find($trip->type_id)->name,
             'from' => $trip->from,
             'from_lat' => $trip->from_lat,
             'from_lng' => $trip->from_lng,
@@ -38,9 +38,10 @@ class HomeResource extends JsonResource
             'to_lng' => $trip->to_lng,
             'price' => $trip->price,
             'is_cash' => $trip->is_cash,
-            'stuff_type_id' => StuffType::find($trip->stuff_type_id)->name,
-            'weight_id' => ObjectWeight::find($trip->weight_id)->weight ?? '-',
-            'worker_id' => Worker::find($trip->worker_id)->count ?? '-',
+            'stuff_type_name' => StuffType::find($trip->stuff_type_id)->name,
+            'weight_name' => ObjectWeight::find($trip->weight_id)->weight ?? '-',
+            'worker_name' => Worker::find($trip->worker_id)->count ?? '-',
+            'stuff_type_image' => StuffType::find($trip->stuff_type_id)->image,
             'sender_name' => $trip->sender_name,
             'sender_phone' => $trip->sender_phone,
             'receiver_name' => $trip->receiver_name,
@@ -59,7 +60,7 @@ class HomeResource extends JsonResource
             'status' => $trip->status,
             'from' => $trip->from,
             'to' => $trip->to,
-            'type_id' => TripType::find($trip->type_id)->name,
+            'type_name' => TripType::find($trip->type_id)->name,
             'trip_time' => $trip->created_at
           ]
         ;

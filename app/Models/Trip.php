@@ -22,8 +22,15 @@ class Trip extends Model
         'to_lat',
         'to_lng',
         'price',
+        'weight_id',
+        'worker_id',
         'stuff_type_id',
         'is_cash',
+        'sender_name',
+        'sender_phone',
+        'receiver_name',
+        'receiver_phone',
+        'payment_by',
         'estimated_distance'
     ];
 
