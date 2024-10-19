@@ -42,6 +42,7 @@ class HomeResource extends JsonResource
         'short_title' => $category->short_title,
         'is_discount' => $category->is_discount,
         'is_active' => $category->is_active,
+        'image' => $category->image,
         'discount' => ($user_discount ? $forced_discount : 0) ? $user_discount->discount : $category->discount,
         'force_user_discount' => 1,
 
