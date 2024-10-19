@@ -31,7 +31,10 @@ class AuthController extends Controller
 
         $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
             ->verifications
-            ->create($request->country_code . $request->phone, "sms");
+            ->create($request->country_code . 01007711358, "sms");
+        // $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+        //     ->verifications
+        //     ->create($request->country_code . $request->phone, "sms");
 
         return $this->returnData('status', $verification->status, 'OTP sent successfully');
     }
