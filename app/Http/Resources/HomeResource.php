@@ -28,6 +28,8 @@ class HomeResource extends JsonResource
         'status' => $trip->status,
         'from' => $trip->from,
         'to' => $trip->to,
+        'type_id' => $trip->type_id,
+        'trip_time' => $trip->created_at
       ];
 
     }
