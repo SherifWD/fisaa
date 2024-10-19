@@ -38,9 +38,9 @@ class HomeResource extends JsonResource
             'to_lng' => $trip->to_lng,
             'price' => $trip->price,
             'is_cash' => $trip->is_cash,
-            'object_type' => StuffType::find($trip->stuff_type_id)->name,
-            'weight' => ObjectWeight::find($trip->weight_id)->weight,
-            'workers' => Worker::find($trip->worker_id)->count,
+            'stuff_type_id' => StuffType::find($trip->stuff_type_id)->name,
+            'weight_id' => ObjectWeight::find($trip->weight_id)->weight,
+            'worker_id' => Worker::find($trip->worker_id)->count,
             'sender_name' => $trip->sender_name,
             'sender_phone' => $trip->sender_phone,
             'receiver_name' => $trip->receiver_name,
@@ -54,12 +54,12 @@ class HomeResource extends JsonResource
           // $trip
           [
             'id' => $trip->id,
-            'object_type' => StuffType::find($trip->object)->name,
+            'object_type' => $trip->object,
             'weight' => $trip->weight,
             'status' => $trip->status,
             'from' => $trip->from,
             'to' => $trip->to,
-            'type_id' => TripType::find($trip->type_id)->name,
+            'type_id' => $trip->type_id,
             'trip_time' => $trip->created_at
           ]
         ;
