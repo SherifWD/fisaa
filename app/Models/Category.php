@@ -19,6 +19,6 @@ class Category extends Model
     ];
     public function getImageAttribute($val)
     {
-        return ($val !== null) ? asset('stuff_images/' . $val) : "";
+        return ($val !== null) ? asset('categories/' . $val) : "";
     }
 }
