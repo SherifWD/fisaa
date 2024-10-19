@@ -59,7 +59,7 @@ class HomeResource extends JsonResource
             'status' => $trip->status,
             'from' => $trip->from,
             'to' => $trip->to,
-            'type_id' => $trip->type_id,
+            'type_id' => TripType::find($trip->type_id)->name,
             'trip_time' => $trip->created_at
           ]
         ;
