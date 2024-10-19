@@ -21,16 +21,19 @@ class HomeResource extends JsonResource
     $categories = [];
     // dd($this->resource['trips']);
     foreach ($this->resource['trips'] as $trip) {
-      $trips[] = [
-        'id' => $trip->id,
-        'object_type' => $trip->object,
-        'weight' => $trip->weight,
-        'status' => $trip->status,
-        'from' => $trip->from,
-        'to' => $trip->to,
-        'type_id' => $trip->type_id,
-        'trip_time' => $trip->created_at
-      ];
+      $trips[] =
+        $trip
+        //  [
+        //   'id' => $trip->id,
+        //   'object_type' => $trip->object,
+        //   'weight' => $trip->weight,
+        //   'status' => $trip->status,
+        //   'from' => $trip->from,
+        //   'to' => $trip->to,
+        //   'type_id' => $trip->type_id,
+        //   'trip_time' => $trip->created_at
+        // ]
+      ;
 
     }
     foreach ($this->resource['categories'] as $category) {

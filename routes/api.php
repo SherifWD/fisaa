@@ -36,8 +36,12 @@ Route::middleware([JwtMiddleware::class])->group(function () {
   Route::post('categories/create', [CategoryController::class, 'createCategory']);
 
   Route::post('trips/create', [TripController::class, 'createTrip']);
-  Route::put('trips/{trip_id}/accept/{driver_id}', [TripController::class, 'acceptTrip']);
-  Route::put('trips/{trip_id}/complete/{stat}', [DriverController::class, 'completeTrip']);
+  Route::post('/trip/{trip_id}/accept', [TripController::class, 'acceptTrip']);
+  Route::post('/trip/{trip_id}/complete', [TripController::class, 'completeTrip']);
+  Route::post('/trip/{trip_id}/review', [TripController::class, 'reviewTrip']);
+  Route::get('/trip/{trip_id}/details', [TripController::class, 'getCurrentTripDetails']);
+  Route::get('/trip/{trip_id}/driver', [TripController::class, 'getDriverDetails']);
+
   Route::put('trips/{trip_id}/cancel', [TripController::class, 'cancelTrip']);
   Route::get('users/{user_id}/trips', [TripController::class, 'getTripHistory']);
 
@@ -50,6 +54,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
   Route::post('driver/update-location', [DriverController::class, 'updateLocation']);
 
   Route::get('/homeScr', [ScreenController::class, 'homeScr']);
+  // Route Definitions
 
 });
 Route::get('/test-broadcast', function () {

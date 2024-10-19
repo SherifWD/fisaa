@@ -142,32 +142,93 @@ class TripController extends Controller
     }
 
 
-    public function acceptTrip($trip_id, $driver_id)
+    public function acceptTrip($trip_id)
     {
-        $trip = Trip::find($trip_id);
+        $driver = auth()->user();
 
-        if (!$trip) {
-            return $this->returnError('E003', 'Trip not found');
-        }
-
-        if ($trip->status !== 'searching') {
-            return $this->returnError('E005', 'Trip has already been accepted.');
-        }
-
-        $driver = User::find($driver_id);
-        if (!$driver || !$driver->is_driver || $driver->is_available !== 1) {
+        if (!$driver->is_driver || $driver->is_available !== 1) {
             return $this->returnError('E006', 'Driver is not available.');
         }
 
-        $trip->driver_id = $driver_id;
+        $trip = Trip::find($trip_id);
+
+        if (!$trip || $trip->status !== 'searching') {
+            return $this->returnError('E005', 'Trip not available for acceptance.');
+        }
+
+        $trip->driver_id = $driver->id;
         $trip->status = 'way';
         $trip->save();
 
-        // Notify the rider about the accepted trip using events or sockets
         broadcast(new TripAccepted($trip))->toOthers();
 
-        return $this->returnSuccessMessage('Trip accepted successfully');
+        return $this->returnData('trip', $trip, 'Trip accepted successfully.');
     }
+    public function completeTrip($trip_id)
+    {
+        $trip = Trip::find($trip_id);
+
+        if (!$trip || $trip->status !== 'way') {
+            return $this->returnError('E007', 'Trip is not in progress.');
+        }
+
+        $trip->status = 'completed';
+        $trip->save();
+
+        return $this->returnSuccessMessage('Trip completed successfully.');
+    }
+    public function reviewTrip(Request $request, $trip_id)
+    {
+        $validator = Validator::make($request->all(), [
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnValidationError('E008', $validator);
+        }
+
+        $trip = Trip::find($trip_id);
+
+        if (!$trip || $trip->status !== 'completed') {
+            return $this->returnError('E009', 'Trip not eligible for review.');
+        }
+
+        // Prevent multiple reviews for the same trip
+        if ($trip->review) {
+            return $this->returnError('E010', 'This trip has already been reviewed.');
+        }
+
+        // Store the review
+        $review = $trip->review()->create([
+            'user_id' => auth()->user()->id,
+            'rating' => $request->rating,
+            'review' => $request->review,
+        ]);
+
+        return $this->returnData('review', $review, 'Review submitted successfully.');
+    }
+    public function getCurrentTripDetails($trip_id)
+    {
+        $trip = Trip::with(['driver', 'passenger'])->find($trip_id);
+
+        if (!$trip) {
+            return $this->returnError('E011', 'Trip not found.');
+        }
+
+        return $this->returnData('trip', $trip, 'Trip details retrieved successfully.');
+    }
+    public function getDriverDetails($trip_id)
+    {
+        $trip = Trip::with('driver')->find($trip_id);
+
+        if (!$trip || !$trip->driver) {
+            return $this->returnError('E012', 'Driver not found for this trip.');
+        }
+
+        return $this->returnData('driver', $trip->driver, 'Driver details retrieved successfully.');
+    }
+
 
     public function getStuffTypes()
     {

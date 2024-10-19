@@ -49,4 +49,11 @@ class Trip extends Model
     {
         return $this->belongsTo(ObjectWeight::class, 'weight_id');
     }
+
+
+    public function review()
+    {
+        return $this->hasOne(TripReview::class);
+    }
+
 }
