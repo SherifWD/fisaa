@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Events\TripAccepted;
+use App\Models\Category;
+use App\Models\ObjectWeight;
 use App\Models\StuffType;
 use App\Models\Trip;
 use App\Models\TripType;
 use App\Models\User;
+use App\Models\Worker;
 use App\Traits\HelpersTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -69,25 +72,39 @@ class TripController extends Controller
     private function createCarrierTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'object_type' => 'required|string',
-            'weight' => 'required|string|in:100kg,200kg,300kg+',
+            'object_type' => 'required|exists:stuff_types,id',
+            'weight' => 'required|exists:object_weights,id', // Validate weight by object_weights table
             'sender_name' => 'required|string|max:255',
             'sender_phone' => 'required|string|max:15',
             'receiver_name' => 'required|string|max:255',
             'receiver_phone' => 'required|string|max:15',
-            'workers_needed' => 'required|in:0,1,2,3+',
+            'workers_needed' => 'required|exists:workers,id', // Validate workers by workers table
             'payment_by' => 'required|string|in:sender,receiver',
+            'type_id' => 'required|exists:trip_types,id',
+            'from' => 'required|string',
+            'from_lat' => 'required|numeric',
+            'from_lng' => 'required|numeric',
+            'to' => 'required|string',
+            'to_lat' => 'required|numeric',
+            'to_lng' => 'required|numeric',
+            'price' => 'required|numeric',
+            'is_cash' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
             return $this->returnValidationError('E004', $validator);
         }
 
-        $trip['drivers'] = $this->findNearbyDrivers($request->from_lat, $request->from_lng, TripType::where('name', 'carrier')->first()->id);
+        $trip['drivers'] = $this->findNearbyDrivers(
+            $request->from_lat,
+            $request->from_lng,
+            TripType::where('name', 'carrier')->first()->id
+        );
 
         if ($trip['drivers']->isEmpty()) {
             return $this->returnError('E003', 'No drivers found nearby for carrier.');
         }
+
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
             'type_id' => $request->type_id,
@@ -100,17 +117,18 @@ class TripController extends Controller
             'price' => $request->price,
             'is_cash' => $request->is_cash,
             'stuff_type_id' => $request->object_type,
-            'weight' => $request->weight,
+            'weight_id' => $request->weight, // Reference the object_weights table
+            'worker_id' => $request->workers_needed, // Reference the workers table
             'sender_name' => $request->sender_name,
             'sender_phone' => $request->sender_phone,
             'receiver_name' => $request->receiver_name,
             'receiver_phone' => $request->receiver_phone,
-            'workers_needed' => $request->workers_needed,
             'payment_by' => $request->payment_by,
         ]);
 
         return $this->returnData('trip', $trip, 'Carrier trip created successfully');
     }
+
     private function findNearbyDrivers($latitude, $longitude, $carType)
     {
 
@@ -153,8 +171,11 @@ class TripController extends Controller
 
     public function getStuffTypes()
     {
-        $types = StuffType::all();
-        return $this->returnData('trips', $types, 'Trip history retrieved successfully');
+        $data['types'] = StuffType::all();
+        $data['workers'] = Worker::all();
+        $data['weight'] = ObjectWeight::all();
+        $data['categories'] = Category::all();
+        return $this->returnData('trips', $data, 'Trip history retrieved successfully');
     }
     public function getTripHistory($user_id)
     {
