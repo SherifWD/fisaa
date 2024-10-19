@@ -14,7 +14,11 @@ class Category extends Model
         'short_title',
         'is_discount',
         'is_active',
-        'discount'
+        'discount',
+        'image'
     ];
-
+    public function getImageAttribute($val)
+    {
+        return ($val !== null) ? asset('stuff_images/' . $val) : "";
+    }
 }
