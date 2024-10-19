@@ -2,8 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ObjectWeight;
+use App\Models\StuffType;
 use App\Models\TripType;
 use App\Models\UserDiscount;
+use App\Models\Worker;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
 class HomeResource extends JsonResource
@@ -23,18 +26,40 @@ class HomeResource extends JsonResource
     // dd($this->resource['trips']);
     foreach ($this->resource['trips'] as $trip) {
       if (TripType::find($trip->type_id)->name == 'carrier') {
-        $trips[] = $trip;
+        $trips[] =
+          [
+            'id' => $trip->id,
+            'type_id' => TripType::find($trip->type_id)->name,
+            'from' => $trip->from,
+            'from_lat' => $trip->from_lat,
+            'from_lng' => $trip->from_lng,
+            'to' => $trip->to,
+            'to_lat' => $trip->to_lat,
+            'to_lng' => $trip->to_lng,
+            'price' => $trip->price,
+            'is_cash' => $trip->is_cash,
+            'object_type' => StuffType::find($trip->stuff_type_id)->name,
+            'weight' => ObjectWeight::find($trip->weight_id)->weight,
+            'workers' => Worker::find($trip->worker_id)->count,
+            'sender_name' => $trip->sender_name,
+            'sender_phone' => $trip->sender_phone,
+            'receiver_name' => $trip->receiver_name,
+            'receiver_phone' => $trip->receiver_phone,
+            'payment_by' => $trip->payment_by,
+            'trip_time' => $trip->created_at,
+            'status' => $trip->status,
+          ];
       } else
         $trips[] =
           // $trip
           [
             'id' => $trip->id,
-            'object_type' => $trip->object,
+            'object_type' => StuffType::find($trip->object)->name,
             'weight' => $trip->weight,
             'status' => $trip->status,
             'from' => $trip->from,
             'to' => $trip->to,
-            'type_id' => $trip->type_id,
+            'type_id' => TripType::find($trip->type_id)->name,
             'trip_time' => $trip->created_at
           ]
         ;

@@ -48,11 +48,10 @@ class TripController extends Controller
 
     private function createPullupTrip(Request $request)
     {
-        $trip['drivers'] = $this->findNearbyDrivers($request->from_lat, $request->from_lng, 'pullup');
 
-        if ($trip['drivers']->isEmpty()) {
-            return $this->returnError('E003', 'No drivers found nearby for pullup.');
-        }
+        // if ($trip['drivers']->isEmpty()) {
+        //     return $this->returnError('E003', 'No drivers found nearby for pullup.');
+        // }
 
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
@@ -66,6 +65,7 @@ class TripController extends Controller
             'price' => $request->price,
             'is_cash' => $request->is_cash,
         ]);
+        $trip['drivers'] = $this->findNearbyDrivers($request->from_lat, $request->from_lng, 'pullup');
 
         return $this->returnData('trip', $trip, 'Pullup trip created successfully');
     }
@@ -95,15 +95,11 @@ class TripController extends Controller
             return $this->returnValidationError('E004', $validator);
         }
 
-        $trip['drivers'] = $this->findNearbyDrivers(
-            $request->from_lat,
-            $request->from_lng,
-            TripType::where('name', 'carrier')->first()->id
-        );
 
-        if ($trip['drivers']->isEmpty()) {
-            return $this->returnError('E003', 'No drivers found nearby for carrier.');
-        }
+
+        // if ($trip['drivers']->isEmpty()) {
+        //     return $this->returnError('E003', 'No drivers found nearby for carrier.');
+        // }
 
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
@@ -125,7 +121,11 @@ class TripController extends Controller
             'receiver_phone' => $request->receiver_phone,
             'payment_by' => $request->payment_by,
         ]);
-
+        $trip['drivers'] = $this->findNearbyDrivers(
+            $request->from_lat,
+            $request->from_lng,
+            TripType::where('name', 'carrier')->first()->id
+        );
         return $this->returnData('trip', $trip, 'Carrier trip created successfully');
     }
 
