@@ -22,6 +22,7 @@ class Trip extends Model
         'to_lat',
         'to_lng',
         'price',
+        'stuff_type_id',
         'is_cash',
         'estimated_distance'
     ];
@@ -39,5 +40,13 @@ class Trip extends Model
     public function type()
     {
         return $this->belongsTo(TripType::class, 'type_id');
+    }
+    public function worker()
+    {
+        return $this->belongsTo(Worker::class, 'worker_id');
+    }
+    public function weight()
+    {
+        return $this->belongsTo(ObjectWeight::class, 'weight_id');
     }
 }
