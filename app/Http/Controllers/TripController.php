@@ -21,14 +21,12 @@ class TripController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'type_id' => 'required|exists:trip_types,id',
-            // 'car_type' => 'required|string|in:pullup,carrier',
             'from' => 'required|string',
-            'from_lat' => 'required|string',
-            'from_lng' => 'required|string',
+            'from_lat' => 'required|numeric',
+            'from_lng' => 'required|numeric',
             'to' => 'required|string',
-            'to_lat' => 'required|string',
-            'to_lng' => 'required|string',
-            'price' => 'required|numeric',
+            'to_lat' => 'required|numeric',
+            'to_lng' => 'required|numeric',
             'is_cash' => 'boolean',
         ]);
 
@@ -37,6 +35,7 @@ class TripController extends Controller
         }
 
         $carType = TripType::find($request->type_id)->name;
+
         if ($carType === 'pullup') {
             return $this->createPullupTrip($request);
         } elseif ($carType === 'carrier') {
@@ -48,10 +47,12 @@ class TripController extends Controller
 
     private function createPullupTrip(Request $request)
     {
-
-        // if ($trip['drivers']->isEmpty()) {
-        //     return $this->returnError('E003', 'No drivers found nearby for pullup.');
-        // }
+        $price = $this->calculateDistancePrice(
+            $request->from_lat,
+            $request->from_lng,
+            $request->to_lat,
+            $request->to_lng
+        );
 
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
@@ -62,44 +63,45 @@ class TripController extends Controller
             'to' => $request->to,
             'to_lat' => $request->to_lat,
             'to_lng' => $request->to_lng,
-            'price' => $request->price,
+            'price' => $price,
             'is_cash' => $request->is_cash,
         ]);
+
         $trip['drivers'] = $this->findNearbyDrivers($request->from_lat, $request->from_lng, 'pullup');
 
         return $this->returnData('trip', $trip, 'Pullup trip created successfully');
     }
+
     private function createCarrierTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'object_type' => 'required|exists:stuff_types,id',
-            'weight' => 'required|exists:object_weights,id', // Validate weight by object_weights table
+            'weight' => 'required|exists:object_weights,id',
             'sender_name' => 'required|string|max:255',
             'sender_phone' => 'required|string|max:15',
             'receiver_name' => 'required|string|max:255',
             'receiver_phone' => 'required|string|max:15',
-            'workers_needed' => 'required|exists:workers,id', // Validate workers by workers table
+            'workers_needed' => 'required|exists:workers,id',
             'payment_by' => 'required|string|in:sender,receiver',
-            'type_id' => 'required|exists:trip_types,id',
-            'from' => 'required|string',
-            'from_lat' => 'required|numeric',
-            'from_lng' => 'required|numeric',
-            'to' => 'required|string',
-            'to_lat' => 'required|numeric',
-            'to_lng' => 'required|numeric',
-            'price' => 'required|numeric',
-            'is_cash' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
             return $this->returnValidationError('E004', $validator);
         }
 
+        // Calculate price based on distance and additional parameters
+        $distancePrice = $this->calculateDistancePrice(
+            $request->from_lat,
+            $request->from_lng,
+            $request->to_lat,
+            $request->to_lng
+        );
 
+        $workerPrice = Worker::find($request->workers_needed)->price;
+        $weightPrice = ObjectWeight::find($request->weight)->price;
+        $stuffTypePrice = StuffType::find($request->object_type)->price;
 
-        // if ($trip['drivers']->isEmpty()) {
-        //     return $this->returnError('E003', 'No drivers found nearby for carrier.');
-        // }
+        $totalPrice = $distancePrice + $workerPrice + $weightPrice + $stuffTypePrice;
 
         $trip['trip'] = Trip::create([
             'passenger_id' => auth()->user()->id,
@@ -110,24 +112,55 @@ class TripController extends Controller
             'to' => $request->to,
             'to_lat' => $request->to_lat,
             'to_lng' => $request->to_lng,
-            'price' => $request->price,
+            'price' => $totalPrice,
             'is_cash' => $request->is_cash,
             'stuff_type_id' => $request->object_type,
-            'weight_id' => $request->weight, // Reference the object_weights table
-            'worker_id' => $request->workers_needed, // Reference the workers table
+            'weight_id' => $request->weight,
+            'worker_id' => $request->workers_needed,
             'sender_name' => $request->sender_name,
             'sender_phone' => $request->sender_phone,
             'receiver_name' => $request->receiver_name,
             'receiver_phone' => $request->receiver_phone,
             'payment_by' => $request->payment_by,
         ]);
+
         $trip['drivers'] = $this->findNearbyDrivers(
             $request->from_lat,
             $request->from_lng,
             TripType::where('name', 'carrier')->first()->id
         );
+
         return $this->returnData('trip', $trip, 'Carrier trip created successfully');
     }
+
+    private function calculateDistancePrice($fromLat, $fromLng, $toLat, $toLng)
+    {
+        $distance = $this->calculateDistance($fromLat, $fromLng, $toLat, $toLng);
+        $pricePerKm = env('PRICE_PER_KM', 5); // Price per km from environment config
+
+        return $distance * $pricePerKm;
+    }
+
+    private function calculateDistance($fromLat, $fromLng, $toLat, $toLng)
+    {
+        $earthRadius = 6371; // Earth's radius in kilometers
+
+        $latFrom = deg2rad($fromLat);
+        $lngFrom = deg2rad($fromLng);
+        $latTo = deg2rad($toLat);
+        $lngTo = deg2rad($toLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lngDelta = $lngTo - $lngFrom;
+
+        $a = sin($latDelta / 2) ** 2 +
+            cos($latFrom) * cos($latTo) * sin($lngDelta / 2) ** 2;
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c; // Distance in kilometers
+    }
+
 
     private function findNearbyDrivers($latitude, $longitude, $carType)
     {

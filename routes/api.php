@@ -12,17 +12,18 @@ use App\Http\Controllers\DriverController;
 use App\Http\Middleware\JwtMiddleware;
 
 // Step 1: Request phone number and send OTP
-Route::post('request-phone-number', [AuthController::class, 'requestPhoneNumber']);
+// Route::post('request-phone-number', [AuthController::class, 'requestPhoneNumber']);
 
-// Step 2: Validate OTP
-Route::post('validate-otp', [AuthController::class, 'validateOtp']);
+// // Step 2: Validate OTP
+// Route::post('validate-otp', [AuthController::class, 'validateOtp']);
 
-// Step 3: Complete registration
-Route::post('register', [AuthController::class, 'register']);
+// // Step 3: Complete registration
+// Route::post('register', [AuthController::class, 'register']);
+Route::post('register', [AuthController::class, 'registerUser']);
 
 // Login route
-Route::post('login', [AuthController::class, 'login']);
-Route::post('login-validate-login', [AuthController::class, 'loginValidateOtp']);
+Route::post('login', [AuthController::class, 'loginOrValidateOtp']);
+// Route::post('login-validate-login', [AuthController::class, 'loginValidateOtp']);
 
 Route::middleware([JwtMiddleware::class])->group(function () {
 
