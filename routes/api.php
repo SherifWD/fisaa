@@ -11,53 +11,69 @@ use App\Http\Controllers\DriverCarController;
 use App\Http\Controllers\DriverController;
 use App\Http\Middleware\JwtMiddleware;
 
-// Step 1: Request phone number and send OTP
-// Route::post('request-phone-number', [AuthController::class, 'requestPhoneNumber']);
+// Authentication Routes
+Route::prefix('auth')->group(function () {
+  Route::post('request-phone-number', [AuthController::class, 'requestPhoneNumber']);
+  Route::post('validate-otp', [AuthController::class, 'validateOtp']);
+  Route::post('register', [AuthController::class, 'register']);
+  Route::post('login', [AuthController::class, 'login']);
+  Route::post('login-validate-otp', [AuthController::class, 'loginValidateOtp']);
+});
 
-// // Step 2: Validate OTP
-// Route::post('validate-otp', [AuthController::class, 'validateOtp']);
-
-// // Step 3: Complete registration
-// Route::post('register', [AuthController::class, 'register']);
-Route::post('register', [AuthController::class, 'registerUser']);
-
-// Login route
-Route::post('login', [AuthController::class, 'loginOrValidateOtp']);
-// Route::post('login-validate-login', [AuthController::class, 'loginValidateOtp']);
-
+// Routes protected by JWT middleware
 Route::middleware([JwtMiddleware::class])->group(function () {
 
+  // User Routes
   Route::get('user', [AuthController::class, 'getAuthenticatedUser']);
   Route::post('logout', [AuthController::class, 'logout']);
 
-  Route::post('documents/submit', [DocumentController::class, 'submitDocuments']);
-  Route::put('documents/{id}/approve', [DocumentController::class, 'approveDocument']);
+  // Document Routes
+  Route::prefix('documents')->group(function () {
+    Route::post('submit', [DocumentController::class, 'submitDocuments']);
+    Route::put('{id}/approve', [DocumentController::class, 'approveDocument']);
+  });
 
-  Route::get('categories', [CategoryController::class, 'getCategories']);
-  Route::post('categories/create', [CategoryController::class, 'createCategory']);
+  // Category Routes
+  Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'getCategories']);
+    Route::post('create', [CategoryController::class, 'createCategory']);
+  });
 
-  Route::post('trips/create', [TripController::class, 'createTrip']);
-  Route::post('/trip/{trip_id}/accept', [TripController::class, 'acceptTrip']);
-  Route::post('/trip/{trip_id}/complete', [TripController::class, 'completeTrip']);
-  Route::post('/trip/{trip_id}/review', [TripController::class, 'reviewTrip']);
-  Route::get('/trip/{trip_id}/details', [TripController::class, 'getCurrentTripDetails']);
-  Route::get('/trip/{trip_id}/driver', [TripController::class, 'getDriverDetails']);
+  // Trip Routes
+  Route::prefix('trips')->group(function () {
+    Route::post('create', [TripController::class, 'createTrip']);
+    Route::put('{trip_id}/cancel', [TripController::class, 'cancelTrip']);
+    Route::get('{trip_id}/details', [TripController::class, 'getCurrentTripDetails']);
+    Route::get('{trip_id}/driver', [TripController::class, 'getDriverDetails']);
+    Route::post('{trip_id}/accept', [TripController::class, 'acceptTrip']);
+    Route::post('{trip_id}/complete', [TripController::class, 'completeTrip']);
+    Route::post('{trip_id}/review', [TripController::class, 'reviewTrip']);
+    Route::get('users/{user_id}/history', [TripController::class, 'getTripHistory']);
+    Route::get('stuff-types', [TripController::class, 'getStuffTypes']);
+    Route::get('driver/nearby', [TripController::class, 'getNearbyTrips']);
+  });
 
-  Route::put('trips/{trip_id}/cancel', [TripController::class, 'cancelTrip']);
-  Route::get('users/{user_id}/trips', [TripController::class, 'getTripHistory']);
+  // Trip Type Routes
+  Route::prefix('trip-types')->group(function () {
+    Route::get('/', [TripTypeController::class, 'getTripTypes']);
+    Route::post('create', [TripTypeController::class, 'createTripType']);
+  });
 
-  Route::get('get-stuff-types', [TripController::class, 'getStuffTypes']);
-  Route::get('trip-types', [TripTypeController::class, 'getTripTypes']);
-  Route::post('trip-types/create', [TripTypeController::class, 'createTripType']);
+  // Driver Car Routes
+  Route::prefix('driver-cars')->group(function () {
+    Route::post('add', [DriverCarController::class, 'addCar']);
+  });
 
-  Route::post('driver-cars/add', [DriverCarController::class, 'addCar']);
-  Route::get('driver/nearby-trips', [TripController::class, 'getNearbyTrips']);
-  Route::post('driver/update-location', [DriverController::class, 'updateLocation']);
+  // Driver Routes
+  Route::prefix('driver')->group(function () {
+    Route::post('update-location', [DriverController::class, 'updateLocation']);
+  });
 
-  Route::get('/homeScr', [ScreenController::class, 'homeScr']);
-  // Route Definitions
-
+  // Screen Routes
+  Route::get('home-screen', [ScreenController::class, 'homeScr']);
 });
+
+// Test Broadcast Route
 Route::get('/test-broadcast', function () {
   broadcast(new \App\Events\TestEvent());
   return 'Broadcasted';
