@@ -49,16 +49,17 @@ class AuthController extends Controller
                     return $this->returnError('E003', 'User not found. Please register.');
                 }
 
+                $token = JWTAuth::fromUser($user);
                 // Check if user is missing a name and needs to update profile
                 if (empty($user->name)) {
                     return $this->returnData('update_profile', [
                         'message' => 'Please update your profile with your name.',
-                        'required_fields' => ['name']
+                        'required_fields' => ['name'],
+                        'token' => $token
                     ], 'Incomplete profile');
                 }
 
                 // Login success, generate token
-                $token = JWTAuth::fromUser($user);
                 return $this->returnData('token', compact('token'), 'Login successful');
             } else {
                 return $this->returnError('E002', 'Invalid OTP');
