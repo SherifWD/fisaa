@@ -50,10 +50,10 @@ class AuthController extends Controller
                 }
 
                 // Check if user is missing a name and needs to update profile
-                if (empty($user->fname) || empty($user->lname)) {
+                if (empty($user->name)) {
                     return $this->returnData('update_profile', [
                         'message' => 'Please update your profile with your name.',
-                        'required_fields' => ['fname', 'lname']
+                        'required_fields' => ['name']
                     ], 'Incomplete profile');
                 }
 
