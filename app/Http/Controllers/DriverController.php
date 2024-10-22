@@ -18,10 +18,12 @@ class DriverController extends Controller
     {
         $driver = auth()->user();
 
-        if (!$driver->is_driver) {
+        // Ensure the authenticated user is valid and is a driver
+        if (!$driver || !$driver->is_driver) {
             return $this->returnError('E002', 'User is not a driver.');
         }
 
+        // Validate the latitude and longitude
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
@@ -31,15 +33,17 @@ class DriverController extends Controller
             return $this->returnValidationError('E001', $validator);
         }
 
+        // Update the driver's location
         $driver->lat = $request->lat;
         $driver->lng = $request->lng;
         $driver->save();
 
-        // Broadcast the driver's location update
+        // Broadcast the driver's updated location
         broadcast(new DriverLocationUpdated($driver))->toOthers();
 
         return $this->returnSuccessMessage('Location updated successfully');
     }
+
 
     public function completeTrip($trip_id, $stat)
     {
