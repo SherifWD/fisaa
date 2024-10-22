@@ -13,3 +13,8 @@ Route::get('/event', function () {
 
     return 'done';
 });
+Route::post('/pusher/webhook', function (Request $request) {
+    Log::info('Pusher Webhook Received:', $request->all());
+
+    return response()->json(['status' => 'Webhook received']);
+});
