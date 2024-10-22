@@ -173,39 +173,6 @@ class AuthController extends Controller
         }
     }
 
-    // public function register(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'fname' => 'required|string|max:255',
-    //         'lname' => 'required|string|max:255',
-    //         'phone' => 'required|string|unique:users,phone',
-    //         'password' => 'required|string|min:6',
-    //         'country_code' => 'required',
-    //         'email' => 'email',
-    //         'is_driver' => 'required|boolean',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return $this->returnValidationError('E001', $validator);
-    //     }
-
-    //     // You can also add an additional check here to ensure the OTP is validated before registration.
-
-    //     $user = User::create([
-    //         'fname' => $request->fname,
-    //         'lname' => $request->lname,
-    //         'email' => $request->email ?? null,
-    //         'phone' => $request->phone,
-    //         'country_code' => $request->country_code,
-    //         'password' => Hash::make($request->password),
-    //         'is_driver' => $request->is_driver,
-    //     ]);
-
-    //     $token = JWTAuth::fromUser($user);
-
-    //     return $this->returnData('token', compact('token'), 'User registered successfully');
-    // }
-
 
     public function login(Request $request)
     {
@@ -233,46 +200,6 @@ class AuthController extends Controller
         }
     }
 
-    // public function loginValidateOtp(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'phone' => 'required|string|exists:users,phone',
-    //         'country_code' => 'required|string',
-    //         'otp' => 'required|string',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return $this->returnValidationError('E001', $validator);
-    //     }
-
-    //     $sid = env('TWILIO_SID');
-    //     $token = env('TWILIO_AUTH');
-    //     $twilio = new Client($sid, $token);
-
-    //     try {
-    //         $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
-    //             ->verificationChecks
-    //             ->create([
-    //                 "to" => $request->country_code . $request->phone,
-    //                 "code" => $request->otp,
-    //             ]);
-
-    //         if ($verification_check->status === 'approved') {
-    //             $user = User::where('phone', $request->phone)->first();
-
-    //             if (!$user) {
-    //                 return $this->returnError('E003', 'User not found');
-    //             }
-
-    //             $token = JWTAuth::fromUser($user);
-    //             return $this->returnData('token', compact('token'), 'Login successful');
-    //         } else {
-    //             return $this->returnError('E002', 'Invalid OTP');
-    //         }
-    //     } catch (\Exception $e) {
-    //         return $this->returnError('E500', 'OTP validation failed');
-    //     }
-    // }
 
 
     public function getAuthenticatedUser()
