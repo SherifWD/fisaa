@@ -16,7 +16,14 @@ use Illuminate\Support\Facades\Validator;
 class TripController extends Controller
 {
     use HelpersTrait;
-
+    public function cancelTrip(){
+        $trips = Trip::where('status','searching')->where('created_at','>',now())->get();
+        foreach($trips as $trip){
+            $trip->status = 'cancel';
+            $trip->save();
+        }
+        $this->returnDate('data','$trips','Cancelled Trips');
+    }
     public function createTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [

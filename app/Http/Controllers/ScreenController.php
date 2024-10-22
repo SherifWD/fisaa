@@ -15,7 +15,10 @@ class ScreenController extends Controller
     use backendTraits;
     public function homeScr()
     {
-        $data['trips'] = Trip::where('passenger_id', auth()->user()->id)->where('status', 'searching')->get();
+        $data['trips'] = Trip::where('passenger_id', auth()->user()->id)
+    ->whereIn('status', ['searching', 'way','arrived'])
+    ->get();
+
         $data['categories'] = Category::all();
 
         $resource = HomeResource::make($data);

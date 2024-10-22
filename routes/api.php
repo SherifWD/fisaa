@@ -10,7 +10,11 @@ use App\Http\Controllers\TripTypeController;
 use App\Http\Controllers\DriverCarController;
 use App\Http\Controllers\DriverController;
 use App\Http\Middleware\JwtMiddleware;
-
+use Illuminate\Http\Request;
+Route::post('/pusher/webhook', function (Request $request) {
+    Log::info('Pusher Webhook Received:', $request->all());
+    return response()->json(['status' => 'Webhook received']);
+});
 // Authentication Routes
 Route::prefix('auth')->group(function () {
   Route::post('request-phone-number', [AuthController::class, 'requestPhoneNumber']);
@@ -20,6 +24,7 @@ Route::prefix('auth')->group(function () {
   Route::post('login-validate-otp', [AuthController::class, 'loginValidateOtp']);
 });
 
+    Route::get('get-stuff-types', [TripController::class, 'getStuffTypes']);
 // Routes protected by JWT middleware
 Route::middleware([JwtMiddleware::class])->group(function () {
     Route::prefix('auth')->group(function () {
@@ -55,7 +60,6 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('users/{user_id}/history', [TripController::class, 'getTripHistory']);
     Route::get('driver/nearby', [TripController::class, 'getNearbyTrips']);
   });
-    Route::get('get-stuff-types', [TripController::class, 'getStuffTypes']);
 
   // Trip Type Routes
   Route::prefix('trip-types')->group(function () {
