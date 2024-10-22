@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use App\Models\Trip;
 
@@ -13,7 +14,7 @@ class CancelTripCommand extends Command
     public function handle()
     {
         $trips = Trip::where('status', 'searching')
-            ->where('created_at', '>', now())
+            ->where('created_at', '<', Carbon::now()->subHour())
             ->get();
 
         foreach ($trips as $trip) {
