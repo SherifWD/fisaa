@@ -17,15 +17,13 @@ class DriverLocationUpdated implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $driver;
-    public $message;
     /**
      * Create a new event instance.
      *
      * @param User $driver
      */
-    public function __construct($message, User $driver)
+    public function __construct(User $driver)
     {
-        $this->message = $message;
         $this->driver = $driver;
     }
 
