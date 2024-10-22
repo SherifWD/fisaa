@@ -22,7 +22,9 @@ Route::prefix('auth')->group(function () {
 
 // Routes protected by JWT middleware
 Route::middleware([JwtMiddleware::class])->group(function () {
-
+    Route::prefix('auth')->group(function () {
+  Route::post('update-profile', [AuthController::class, 'updateProfile']);
+});
   // User Routes
   Route::get('user', [AuthController::class, 'getAuthenticatedUser']);
   Route::post('logout', [AuthController::class, 'logout']);
@@ -42,6 +44,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
   // Trip Routes
   Route::prefix('trips')->group(function () {
     Route::post('create', [TripController::class, 'createTrip']);
+    Route::post('/trip/price', [TripController::class, 'getTripPrice']);
+
     Route::put('{trip_id}/cancel', [TripController::class, 'cancelTrip']);
     Route::get('{trip_id}/details', [TripController::class, 'getCurrentTripDetails']);
     Route::get('{trip_id}/driver', [TripController::class, 'getDriverDetails']);
@@ -49,9 +53,9 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('{trip_id}/complete', [TripController::class, 'completeTrip']);
     Route::post('{trip_id}/review', [TripController::class, 'reviewTrip']);
     Route::get('users/{user_id}/history', [TripController::class, 'getTripHistory']);
-    Route::get('stuff-types', [TripController::class, 'getStuffTypes']);
     Route::get('driver/nearby', [TripController::class, 'getNearbyTrips']);
   });
+    Route::get('get-stuff-types', [TripController::class, 'getStuffTypes']);
 
   // Trip Type Routes
   Route::prefix('trip-types')->group(function () {
@@ -66,11 +70,11 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
   // Driver Routes
   Route::prefix('driver')->group(function () {
-    Route::post('update-location', [DriverController::class, 'updateLocation']);
+    Route::any('update-location', [DriverController::class, 'updateLocation']);
   });
 
   // Screen Routes
-  Route::get('home-screen', [ScreenController::class, 'homeScr']);
+  Route::get('homeScr', [ScreenController::class, 'homeScr']);
 });
 
 // Test Broadcast Route
