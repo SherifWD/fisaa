@@ -132,13 +132,55 @@ class TripController extends Controller
 
         return $this->returnData('trip', $trip, 'Carrier trip created successfully');
     }
+public function getTripPrice(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'type_id' => 'required|exists:trip_types,id',
+        'from_lat' => 'required|numeric',
+        'from_lng' => 'required|numeric',
+        'to_lat' => 'required|numeric',
+        'to_lng' => 'required|numeric',
+        'object_type' => 'nullable|exists:stuff_types,id',
+        'weight' => 'nullable|exists:object_weights,id',
+        'workers_needed' => 'nullable|exists:workers,id',
+    ]);
+
+    if ($validator->fails()) {
+        return $this->returnValidationError('E003', $validator);
+    }
+
+    // Calculate distance-based price
+    $distancePrice = $this->calculateDistancePrice(
+        $request->from_lat,
+        $request->from_lng,
+        $request->to_lat,
+        $request->to_lng
+    );
+
+    $totalPrice = $distancePrice;
+
+    // Add additional prices for 'carrier' type trips
+    $carType = TripType::find($request->type_id)->name;
+    if ($carType === 'carrier') {
+        $workerPrice = Worker::find($request->workers_needed)->price ?? 0;
+        $weightPrice = ObjectWeight::find($request->weight)->price ?? 0;
+        $stuffTypePrice = StuffType::find($request->object_type)->price ?? 0;
+
+        $totalPrice += $workerPrice + $weightPrice + $stuffTypePrice;
+    }
+
+    return response()->json([
+        'total_price' => $totalPrice,
+        'message' => 'Trip price calculated successfully',
+    ]);
+}
 
     private function calculateDistancePrice($fromLat, $fromLng, $toLat, $toLng)
     {
         $distance = $this->calculateDistance($fromLat, $fromLng, $toLat, $toLng);
         $pricePerKm = env('PRICE_PER_KM', 5); // Price per km from environment config
-
-        return $distance * $pricePerKm;
+        
+        return round($distance * $pricePerKm,2);
     }
 
     private function calculateDistance($fromLat, $fromLng, $toLat, $toLng)

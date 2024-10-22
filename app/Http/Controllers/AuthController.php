@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Traits\HelpersTrait;
+use App\Traits\backendTraits;
 use Twilio\Rest\Client;
 class AuthController extends Controller
 {
     use HelpersTrait;
-
+    use backendTraits;
 
     public function loginValidateOtp(Request $request)
     {
@@ -32,14 +33,17 @@ class AuthController extends Controller
         $twilio = new Client($sid, $token);
 
         try {
-            $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
-                ->verificationChecks
-                ->create([
-                    "to" => $request->country_code . $request->phone,
-                    "code" => $request->otp,
-                ]);
-
-            if ($verification_check->status === 'approved') {
+            // $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+            //     ->verificationChecks
+            //     ->create([
+            //         "to" => $request->country_code . $request->phone,
+            //         "code" => $request->otp,
+            //     ]);
+                if($request->otp == User::where('phone',$request->phone)->where('country_code',$request->country_code)->first()->otp){
+                    $verification_check['status'] = 'approved';
+                }
+// dd($verification_check);
+            if ($verification_check['status'] === 'approved') {
                 $user = User::where('phone', $request->phone)
                     ->where('country_code', $request->country_code)
                     ->first();
@@ -86,20 +90,25 @@ class AuthController extends Controller
         $user->update([
             'name' => $request->name,
             'email' => $request->email ?? $user->email,
+            'phone' => $request->phone ?? $user->phone,
         ]);
-
-        return $this->returnSuccessMessage('Profile updated successfully');
+        if(isset($request->image)){
+        $user->image = $this->upploadImage($request->file('image'), 'profile_image') ?? $user->image;
+        $user->save();
+        }
+        $data['usr'] = $user;
+        return $this->returnData('data',$data,'Profile updated successfully');
     }
 
-    public function register(Request $request)
+    public function register(Request $request,$flag)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:users,phone',
-            'password' => 'required|string|min:6',
-            'country_code' => 'required',
+            // 'phone' => 'required|string|unique:users,phone',
+            // 'password' => 'required|string|min:6',
+            // 'country_code' => 'required',
             'email' => 'nullable|email',
-            'is_driver' => 'required|boolean',
+            // 'is_driver' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -109,10 +118,10 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email ?? null,
-            'phone' => $request->phone,
-            'country_code' => $request->country_code,
-            'password' => Hash::make($request->password),
-            'is_driver' => $request->is_driver,
+            // 'phone' => $request->phone,
+            // 'country_code' => $request->country_code,
+            // 'password' => Hash::make($request->password),
+            // 'is_driver' => $request->is_driver,
         ]);
 
         $token = JWTAuth::fromUser($user);
@@ -133,15 +142,20 @@ class AuthController extends Controller
             return $this->returnValidationError('E001', $validator);
         }
 
-        $sid = env('TWILIO_SID');
-        $token = env('TWILIO_AUTH');
-        $twilio = new Client($sid, $token);
+        // $sid = env('TWILIO_SID');
+        // $token = env('TWILIO_AUTH');
+        // $twilio = new Client($sid, $token);
 
-        $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
-            ->verifications
-            ->create($request->country_code . $request->phone, "sms");
-
-        return $this->returnData('status', $verification->status, 'OTP sent successfully');
+        // $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+        //     ->verifications
+        //     ->create($request->country_code . $request->phone, "sms");
+        $verification['otp'] = rand([00000,99999]);
+        $verification['status'] = 'Success';
+        $usr = User::where('phone',$request->phone)->where('country_code',$request->country_code)->first();
+        $usr->otp = $verification['otp'];
+        $usr->save();
+        $verification['usr'] = $usr;
+        return $this->returnData('status', $verification, 'OTP sent successfully');
     }
     public function validateOtp(Request $request)
     {
@@ -155,20 +169,21 @@ class AuthController extends Controller
             return $this->returnValidationError('E001', $validator);
         }
 
-        $sid = env('TWILIO_SID');
-        $token = env('TWILIO_AUTH');
-        $twilio = new Client($sid, $token);
+        // $sid = env('TWILIO_SID');
+        // $token = env('TWILIO_AUTH');
+        // $twilio = new Client($sid, $token);
 
-        $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
-            ->verificationChecks
-            ->create([
-                "to" => $request->country_code . $request->phone,
-                "code" => $request->otp,
-            ]);
-
-        if ($verification_check->status === 'approved') {
+        // $verification_check = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+        //     ->verificationChecks
+        //     ->create([
+        //         "to" => $request->country_code . $request->phone,
+        //         "code" => $request->otp,
+        //     ]);
+        if($request->otp == User::where('phone',$request->phone)->where('country_code',$request->country_code)->first()->otp)
+        // if ($verification_check->status === 'approved') {
             return $this->returnSuccessMessage('OTP validated successfully');
-        } else {
+        // }
+        else {
             return $this->returnError('E002', 'Invalid OTP');
         }
     }
@@ -177,7 +192,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'phone' => 'required|string|exists:users,phone',
+            'phone' => 'required|string',
             'country_code' => 'required|string',
         ]);
 
@@ -185,19 +200,55 @@ class AuthController extends Controller
             return $this->returnValidationError('E001', $validator);
         }
 
-        $sid = env('TWILIO_SID');
-        $token = env('TWILIO_AUTH');
-        $twilio = new Client($sid, $token);
-
+        // $sid = env('TWILIO_SID');
+        // $token = env('TWILIO_AUTH');
+        // $twilio = new Client($sid, $token);
         try {
-            $verification = $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
-                ->verifications
-                ->create($request->country_code . $request->phone, "sms");
+    // Validate request data
+    $request->validate([
+        'phone' => 'required|numeric|digits_between:7,15',
+        'country_code' => 'required',
+    ]);
 
-            return $this->returnSuccessMessage('OTP sent successfully');
-        } catch (\Exception $e) {
-            return $this->returnError('E500', 'Failed to send OTP');
-        }
+    $verification['otp'] = rand(10000, 99999); // Ensure OTP has 5 digits
+    $verification['status'] = 'Success';
+
+    // Check if user exists
+    $user = User::where('phone', $request->phone)
+                ->where('country_code', $request->country_code)
+                ->first();
+
+    if (!$user) {
+        // Create new user if not found
+        $user = new User();
+        $user->phone = $request->phone;
+        $user->country_code = $request->country_code;
+        $user->otp = $verification['otp'];
+        $user->save();
+    } else {
+        // Update OTP if user exists
+        $user->otp = $verification['otp'];
+        $user->save();
+    }
+
+    $verification['usr'] = $user;
+
+    // Uncomment the following block to integrate with Twilio
+    /*
+    $twilio->verify->v2->services("VA84af6f06b5cfa0d64e9bfdf64a5ecd7e")
+        ->verifications
+        ->create($request->country_code . $request->phone, "sms");
+    */
+
+    return $this->returnData('status', $verification, 'OTP sent successfully');
+} catch (\Illuminate\Validation\ValidationException $e) {
+    // Handle validation errors
+    return $this->returnError('E400', $e->errors());
+} catch (\Exception $e) {
+    // Handle other errors
+    return $this->returnError('E500', 'Failed to send OTP');
+}
+
     }
 
 
