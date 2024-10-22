@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
@@ -12,4 +13,9 @@ Broadcast::channel('trips.{passengerId}', function ($user, $passengerId) {
 
 Broadcast::channel('drivers.{driverId}', function ($user, $driverId) {
     return (int) $user->id === (int) $driverId;
+});
+Broadcast::channel('payment-request', function ($user) {
+    $user = User::find($user->id);
+    $role = 'admin';
+    return in_array($role, ['admin', 'superadmin']);
 });
