@@ -26,4 +26,24 @@ class Document extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function getFrontSideImageAttribute($val)
+    {
+        return ($val !== null) ? asset('documents/' . $val) : "";
+    }
+    public function getBackSideImageAttribute($val)
+    {
+        return ($val !== null) ? asset('documents/' . $val) : "";
+    }
+    public function getLeftSideImageAttribute($val)
+    {
+        return ($val !== null) ? asset('documents/' . $val) : "";
+    }
+    public function getRightSideImageAttribute($val)
+    {
+        return ($val !== null) ? asset('documents/' . $val) : "";
+    }
+    public function getLicenseImageAttribute($val)
+    {
+        return ($val !== null) ? asset('documents/' . $val) : "";
+    }
 }
