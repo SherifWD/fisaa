@@ -7,10 +7,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Laravel\Sanctum\HasApiTokens;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -20,6 +23,16 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+public function canAccessPanel(Panel $panel): bool
+{
+    return true;
+}
+    public function canAccessFilament(): bool
+    {
+        // Grant access only to specific users or all for testing
+        return true;
+    }
+
     protected $fillable = [
         'name',
         'email',

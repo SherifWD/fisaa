@@ -6,8 +6,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "filament/actions": "^3.2",
-        "filament/filament": "^3.2",
+        "consoletvs/charts": "^6.7",
+        "filament/actions": "^3.0",
+        "filament/filament": "^3.0",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",

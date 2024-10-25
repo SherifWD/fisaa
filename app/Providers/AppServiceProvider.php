@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Providers;
-
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-
+use Livewire\Livewire;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+         Livewire::setUpdateRoute(function ($handle) {
+            $url = 'fisaa/public/livewire/update';
+            return Route::post($url, $handle);
+        });
     }
 }
